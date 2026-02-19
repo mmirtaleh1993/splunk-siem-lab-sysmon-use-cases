@@ -1,0 +1,3 @@
+index=<LINUX_INDEX> (source="/var/log/*" OR sourcetype=syslog)
+| stats count as events by host source
+| sort - events
