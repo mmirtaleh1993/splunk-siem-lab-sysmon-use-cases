@@ -1,0 +1,13 @@
+index=<WINDOWS_INDEX> sourcetype=<WINDOWS_SECURITY_SOURCETYPE> (EventCode=4720 OR EventCode=4732)
+| eval action=case(EventCode=4720,"User Created", EventCode=4732,"Added to Local Group", true(),"Other")
+| stats
+    earliest(_time) as first_seen
+    latest(_time) as last_seen
+    values(action) as actions
+    values(Target_Account_Name) as target_user
+    values(Subject_Account_Name) as actor_user
+    values(Group_Name) as groups
+    count as events
+  by host
+| eval severity=case(match(mvjoin(groups,";"),"Administrators|Domain Admins|Enterprise Admins"),"High", true(),"Medium")
+| sort - last_seen
