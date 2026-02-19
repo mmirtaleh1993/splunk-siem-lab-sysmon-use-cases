@@ -1,0 +1,12 @@
+index=<WINDOWS_INDEX> sourcetype=<WINDOWS_SECURITY_SOURCETYPE> EventCode=4625
+| eval src_ip=coalesce(Source_Network_Address, IpAddress, Workstation_Network_Address)
+| where isnotnull(src_ip) AND src_ip!="-" AND src_ip!="::1" AND src_ip!="127.0.0.1"
+| bin _time span=5m
+| stats
+    count as failed_attempts
+    values(Account_Name) as accounts
+    values(Logon_Type) as logon_types
+  by _time host src_ip
+| where failed_attempts >= 5
+| eval severity=case(failed_attempts>=20,"High", failed_attempts>=10,"Medium", true(),"Low")
+| sort - failed_attempts
